@@ -93,7 +93,7 @@ class content_viewed(db.Model):
 
 class search(db.Model):
 	user_id = db.Column(db.ForeignKey(user.iduser), primary_key=True)
-	terms_hash = db.Column(db.DateTime(),primary_key=True)
+	terms_hash = db.Column(db.String(145) ,primary_key=True)
 	datetime = db.Column(db.DateTime(),nullable=False)
 
 #################

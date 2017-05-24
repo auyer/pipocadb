@@ -2,12 +2,13 @@ import os
 import os.path as op
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from flask.ext.mysql import MySQL
+#from flask_mysql import MySQL
 from wtforms import validators
 from sqlalchemy_utils import EmailType
 import flask_admin as admin
 from flask_admin.contrib import sqla
 from flask_admin.contrib.sqla import filters
+from sqlalchemy import CheckConstraint
 
 app = Flask(__name__)
 
@@ -15,8 +16,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = '123456790'
 
 # Create in-memory database
-app.config['DATABASE_FILE'] = 'sample_db.sqlite'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://milho:pipodadepanela@67.205.166.236/pipocadb'
+app.config['SQLALCHEMY_DATABASE_URI'] ='mysql+pymysql://milho:pipocadepanela@67.205.166.236/pipocadb' 
 app.config['SQLALCHEMY_ECHO'] = True
 db = SQLAlchemy(app)
 
@@ -60,7 +60,7 @@ class cast_job(db.Model):
 
 class content(db.Model):
 	idcontent = db.Column(db.Integer, primary_key=True)
-	name = db.Column(db.ForeignKey(content_name.idname), unique=True,nullable=False)
+	name = db.Column(db.ForeignKey(content_name.idcname), unique=True,nullable=False)
 	country = db.Column(db.ForeignKey('country.idcountry'),nullable=False)
 	released = db.Column(db.Date(),nullable=False)
 
@@ -114,12 +114,12 @@ admin.add_view(sqla.ModelView(person, db.session))
 admin.add_view(sqla.ModelView(content_name, db.session))
 admin.add_view(sqla.ModelView(cast_job, db.session))
 admin.add_view(sqla.ModelView(content, db.session))
-admin.add_view(sqla.ModelView(cast, db.session))
-admin.add_view(sqla.ModelView(content_viewed, db.session))
+admin.add_view(sqla.ModelView(cast_member, db.session))
 admin.add_view(sqla.ModelView(user, db.session))
+admin.add_view(sqla.ModelView(content_viewed, db.session))
 admin.add_view(sqla.ModelView(search, db.session))
 
 if __name__ == '__main__':
-
+	db.create_all()
 	# Start app
-	app.run(debug=True, host='67.205.166.236')
+	app.run(debug=True, host='67.205.166.236', port=80)

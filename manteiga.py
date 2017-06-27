@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 #from flask_mysql import MySQL
 from wtforms import validators
 from sqlalchemy_utils import EmailType
+from sqlalchemy_views import CreateView, DropView
 import flask_admin as admin
 from flask_admin.contrib import sqla
 from flask_admin.contrib.sqla import filters
@@ -28,15 +29,23 @@ db = SQLAlchemy(app)
 class fname(db.Model):
 	idfname = db.Column(db.Integer, primary_key=True)
 	fname = db.Column(db.String(15), unique=True,nullable=False)
+	
+	def __repr__(self):
+		return self.fname
 
 class lname(db.Model):
 	idlname = db.Column(db.Integer, primary_key=True)
 	lname = db.Column(db.String(15), unique=True,nullable=False)
-
+	
+	def __repr__(self):
+		return self.lname
 
 class country(db.Model):
 	idcountry = db.Column(db.Integer, primary_key=True)
 	cname = db.Column(db.String(15), unique=True,nullable=False)
+
+	def __repr__(self):
+		return self.cname
 
 class person(db.Model):
 	idperson = db.Column(db.Integer, primary_key=True)
@@ -44,6 +53,9 @@ class person(db.Model):
 	lname = db.Column(db.ForeignKey('lname.idlname'),nullable=False )
 	country = db.Column(db.ForeignKey('country.idcountry'),nullable=False)
 	art_name = db.Column(db.String(15),nullable=True)
+	fnames = db.relationship('fname')
+	lnames = db.relationship('lname')
+	countries= db.relationship('country') 
 
 ###############
 ######### Content Universe
@@ -51,23 +63,33 @@ class person(db.Model):
 class content_name(db.Model):
 	idcname = db.Column(db.Integer, primary_key=True)
 	name = db.Column(db.String(45), unique=True,nullable=False)
-
+	
+	def __repr__(self):
+		return self.name
 
 class cast_job(db.Model):
 	idjob = db.Column(db.Integer, primary_key=True)
 	jobname = db.Column(db.String(15), unique=True,nullable=False)
 	description = db.Column(db.String(145),nullable=True)
-
+	
+	def __repr__(self):
+		return self.jobname
 class content(db.Model):
 	idcontent = db.Column(db.Integer, primary_key=True)
 	name = db.Column(db.ForeignKey(content_name.idcname), unique=True,nullable=False)
 	country = db.Column(db.ForeignKey('country.idcountry'),nullable=False)
 	released = db.Column(db.Date(),nullable=False)
+	
+	def __repr__(self):
+		return self.name
 
 class cast_member(db.Model):
 	idperson = db.Column(db.ForeignKey(person.idperson), primary_key=True)
 	idcontent = db.Column(db.ForeignKey(content.idcontent),primary_key=True)
 	idjob = db.Column(db.ForeignKey(cast_job.idjob),primary_key=True)
+	
+	def __repr__(self):
+		return self.idperson
 	#Uma pessoa pode ter mais de uma função em um memso filme ( ex: Produtor e DIretor)
 
 
@@ -82,15 +104,21 @@ class user(db.Model):
 	country = db.Column(db.ForeignKey('country.idcountry'),nullable=False)
 	email = db.Column(EmailType,nullable=False)
 	ative_until = db.Column(db.DateTime())
+	
+	#def __repr__(self):
+		#return self.
 
 class content_viewed(db.Model):
 	user_id = db.Column(db.ForeignKey(user.iduser), primary_key=True)
 	content_id = db.Column(db.ForeignKey(content.idcontent),primary_key=True)
 	datetime = db.Column(db.DateTime(),primary_key=True)
 	rating = db.Column(db.Boolean())
+	datetime = db.Column(db.DateTime(),primary_key=True)
+	rating = db.Column(db.Boolean())
 	percentage = db.Column(db.Numeric, nullable=True)
 	CheckConstraint('percentage <100 ', name='percentagecheck')
 
+	
 class search(db.Model):
 	user_id = db.Column(db.ForeignKey(user.iduser), primary_key=True)
 	terms_hash = db.Column(db.String(145) ,primary_key=True)
@@ -121,5 +149,6 @@ admin.add_view(sqla.ModelView(search, db.session))
 
 if __name__ == '__main__':
 	db.create_all()
+
 	# Start app
 	app.run(debug=True, host='67.205.166.236', port=80)

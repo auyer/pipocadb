@@ -53,10 +53,17 @@ class person(db.Model):
 	lname = db.Column(db.ForeignKey('lname.idlname'),nullable=False )
 	country = db.Column(db.ForeignKey('country.idcountry'),nullable=False)
 	art_name = db.Column(db.String(15),nullable=True)
-	fnames = db.relationship('fname')
-	lnames = db.relationship('lname')
-	countries= db.relationship('country') 
+	
+	first_name = db.relationship('fname')
+	last_name = db.relationship('lname')
+	country_name= db.relationship('country') 
 
+class insert_person(db.Model):
+	idperson = db.Column(db.Integer, primary_key=True)
+	fnome = db.Column(db.String(15), unique=True,nullable=False)
+	lname = db.Column(db.String(15), unique=True,nullable=False)
+	country = db.Column(db.String(15), unique=True,nullable=False)
+	art_name = db.Column(db.String(15),nullable=True)
 ###############
 ######### Content Universe
 
@@ -79,7 +86,11 @@ class content(db.Model):
 	name = db.Column(db.ForeignKey(content_name.idcname), unique=True,nullable=False)
 	country = db.Column(db.ForeignKey('country.idcountry'),nullable=False)
 	released = db.Column(db.Date(),nullable=False)
+
+	Content_name = db.relationship('content_name')	
+	country_name = db.relationship('country')	
 	
+
 	def __repr__(self):
 		return self.name
 

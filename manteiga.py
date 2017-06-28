@@ -12,6 +12,9 @@ from flask_admin.contrib.sqla import filters
 from sqlalchemy import CheckConstraint
 from sqlalchemy.orm.session import object_session
 from datetime import datetime
+from elizabeth import Personal, Address
+from faker import Faker
+from random import randint
 app = Flask(__name__)
 
 # Create dummy secrey key so we can use sessions
@@ -43,7 +46,7 @@ class lname(db.Model):
 
 class country(db.Model):
 	idcountry = db.Column(db.Integer, primary_key=True)
-	cname = db.Column(db.String(15), unique=True,nullable=False)
+	cname = db.Column(db.String(30), unique=True,nullable=False)
 
 	def __repr__(self):
 		return self.cname
@@ -53,7 +56,7 @@ class person(db.Model):
 	fname = db.Column(db.ForeignKey('fname.idfname'), nullable=False)
 	lname = db.Column(db.ForeignKey('lname.idlname'),nullable=False )
 	country = db.Column(db.ForeignKey('country.idcountry'),nullable=False)
-	art_name = db.Column(db.String(15),nullable=True)
+	art_name = db.Column(db.String(25),nullable=True)
 	
 	First_Name = db.relationship('fname')
 	Last_Name = db.relationship('lname')
@@ -70,10 +73,13 @@ class person(db.Model):
 
 class insert_person(db.Model):
 	idperson = db.Column(db.Integer, primary_key=True)
-	fnome = db.Column(db.String(15), unique=True,nullable=False)
+	fname = db.Column(db.String(15), unique=True,nullable=False)
 	lname = db.Column(db.String(15), unique=True,nullable=False)
-	country = db.Column(db.String(15), unique=True,nullable=False)
-	art_name = db.Column(db.String(15),nullable=True)
+	country = db.Column(db.String(30), unique=True,nullable=False)
+	art_name = db.Column(db.String(25),nullable=True)
+	__tablename__='insert_person'
+
+
 ###############
 ######### Content Universe
 
@@ -90,7 +96,7 @@ class content_name(db.Model):
 
 class cast_job(db.Model):
 	idjob = db.Column(db.Integer, primary_key=True)
-	jobname = db.Column(db.String(15), unique=True,nullable=False)
+	jobname = db.Column(db.String(25), unique=True,nullable=False)
 	description = db.Column(db.String(145),nullable=True)
 	
 	def __repr__(self):
@@ -135,8 +141,8 @@ class user(db.Model):
 	country = db.Column(db.ForeignKey('country.idcountry'),nullable=False)
 	#email = db.Column(EmailType,nullable=False)
 	email = db.Column(db.String(45), unique=True)
-	ative_until = db.Column(db.DateTime())
-	CheckConstraint("REGEXP_LIKE(email,'^[a-zA-Z][a-zA-Z0-9_\.\-]+@([a-zA-Z0-9-]{2,}\.)+([a-zA-Z]{2,4}|[a-zA-Z]{2}\.[a-zA-Z]{2})$')", name='emailcheck')	
+	ative_until = db.Column(db.DateTime(), default=str(datetime.now()))
+	__table_args__=(CheckConstraint("REGEXP_LIKE(user.email,'^[a-zA-Z][a-zA-Z0-9_\.\-]+@([a-zA-Z0-9-]{2,}\.)+([a-zA-Z]{2,4}|[a-zA-Z]{2}\.[a-zA-Z]{2})$')", name='emailcheck'),)	
 	First_Name = db.relationship('fname')
 	Last_Name = db.relationship('lname')
 	Country_Name= db.relationship('country')
@@ -151,7 +157,7 @@ class content_viewed(db.Model):
 	rating = db.Column(db.Boolean())
 	percentage = db.Column(db.Numeric, nullable=True)
 	CheckConstraint('percentage <100 ', name='percentagecheck')
-
+	
 	Content = db.relationship('content')
 	User = db.relationship('user')
 	
@@ -162,6 +168,94 @@ class search(db.Model):
 	datetime = db.Column(db.DateTime(),nullable=False, default=str(datetime.now()))
 
 	User_ID = db.relationship('user') 
+
+def populateDb():
+	f=Faker()
+	p = Personal('PT-BR')
+	a = Address('PT-BR')
+	for i in range(500):	
+		fn = fname()
+		ln = lname()
+		cn = country()
+		us = ''
+		us = user()
+		pe=''
+		pe=person()
+		if i%2==0:
+			name = p.name(gender='male')
+			valb=True
+		else:
+			name = p.name(gender='female')
+			valb=False
+		#fn.fname = name
+		#ln.lname = p.surname()
+		#cn.cname = a.country()
+		#us.First_Name=fn
+		#us.Last_Name=ln
+		us.fname=randint(0,158)
+		pe.fname=randint(0,158)
+		us.lname=randint(0,158)
+		pe.lname=randint(0,158)
+		us.country=randint(0,150)
+		pe.country=randint(0,150)
+		#us.Country_Name=cn
+		us.email = p.email()
+		us.born = f.date_time().isoformat()
+		#fn.fname = name
+		#ln.lname = p.surname()
+		#cn.cname = a.country()
+		#pe.First_Name=fn
+		#pe.Last_Name=ln
+		#pe.Country_Name=cn
+		pe.art_name=name
+		
+		conn=content_name()
+		fm = p.favorite_movie()	
+		if fm.endswith(')'):
+			fm=fm.split('(')[0]
+		conn.name= fm
+		con = content()
+		con.Content_Name=conn
+		#con.Country_Name=cn
+		con.country=randint(0,150)
+		con.released=f.date_time().isoformat()
+
+		#db.session.add(us)
+		#try:
+		#	db.session.commit()
+		#except:
+		#	db.session.rollback()
+		#db.session.add(pe)
+		#try:
+		#	db.session.commit()
+		#except:
+		#	db.session.rollback()
+		#
+		#db.session.add(con)
+		#try:
+		#	db.session.commit()
+		#except:
+		#	db.session.rollback()
+		cv = content_viewed()
+		cv.user_id=randint(4222,5227)
+		cv.content_id=randint(0,175)
+		cv.datetime=default=str(datetime.now())
+		cv.rating = valb
+		cv.percentage = randint(0,100)	
+		db.session.add(cv)
+		try:
+			db.session.commit()
+		except:
+			db.session.rollback()
+		cj = cast_member()
+		cj.idcontent = randint(0,175)
+		cj.idjob = randint(0,10)
+		cj.idperson = randint(1331,5841)
+		db.session.add(cj)
+		try:
+			db.session.commit()
+		except:
+			db.session.rollback()
 #################
 # Flask views
 @app.route('/')
@@ -188,6 +282,6 @@ admin.add_view(sqla.ModelView(search, db.session))
 
 if __name__ == '__main__':
 	db.create_all()
-
+	#populateDb()	
 	# Start app
 	app.run(debug=True, host='67.205.166.236', port=80)

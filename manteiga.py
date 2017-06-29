@@ -1,6 +1,6 @@
 import os
 import os.path as op
-from flask import Flask
+from flask import Flask, request, url_for
 from flask_sqlalchemy import SQLAlchemy
 from wtforms import validators
 from sqlalchemy_utils import EmailType
@@ -165,8 +165,8 @@ class content_viewed(db.Model):
 	
 class search(db.Model):
 	user_id = db.Column(db.ForeignKey(user.iduser), primary_key=True)
-	terms_hash = db.Column(db.String(145) ,primary_key=True)
-	datetime = db.Column(db.DateTime(),nullable=False, default=str(datetime.now()))
+	terms_hash = db.Column(db.String(145))
+	datetime = db.Column(db.DateTime(),nullable=False, default=str(datetime.now()),primary_key=True)
 
 	User_ID = db.relationship('user') 
 
@@ -282,8 +282,36 @@ def fake_act():
 # Flask views
 @app.route('/')
 def index():
-	return '<a href="/admin/">Click me to get to Admin!</a>'
+	return '<h1><a href="/admin/">Click me to get to Admin!</a></h1>'
 
+
+
+@app.route('/search', methods=['GET','POST'])
+def searchf():
+	return str('<form action="{{url_for(".sp") }}" method="GET">'
+			'<input type="text" id = "idp_field">'
+			'<input type="text" id ="terms_field">'
+			'<input type="submit" value="Submit">'
+			'</form>')
+
+
+@app.route('/sp/', methods=['GET','POST'])
+def searchp():
+	try:
+		se= search()
+		se.user_id=int(request.args.get("idp"))
+		se.terms_hash=request.args.get("terms")
+		se.datetime=str(datetime.now())	
+		db.session.add(se)
+		db.session.commit()
+		return str('<h1>Success</h1>'
+			'<a href="/search/">Back to Search</a>')
+	except:
+		
+		db.session.rollback()
+		raise
+		return str('<h1>Error !</h1>'
+			'<a href="/search/">Back to Search</a>')
 
 # Create admin
 admin = admin.Admin(app, name='PiPoCa Admin', template_mode='bootstrap3')
@@ -300,13 +328,14 @@ admin.add_view(sqla.ModelView(content, db.session))
 admin.add_view(sqla.ModelView(cast_member, db.session))
 admin.add_view(sqla.ModelView(user, db.session))
 admin.add_view(sqla.ModelView(content_viewed, db.session))
-admin.add_view(sqla.ModelView(search, db.session))
+#admin.add_view(sqla.ModelView(search, db.session))
 
 if __name__ == '__main__':
 	db.create_all()
 	#populateDb()	
-	#Thread(target=fake_act).start()
+	Thread(target=fake_act).start()
 	Thread(target=app.run, kwargs=dict(debug=False, host='67.205.166.236', port=80)).start()
+	#app.run(debug=True, host='67.205.166.236', port=80)
 	while True:
 		sleep(1)
 		input('\nType anything to get the Statistics\n')	

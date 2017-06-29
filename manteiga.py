@@ -2,19 +2,20 @@ import os
 import os.path as op
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-#from flask_mysql import MySQL
 from wtforms import validators
 from sqlalchemy_utils import EmailType
 from sqlalchemy_views import CreateView, DropView
 import flask_admin as admin
 from flask_admin.contrib import sqla
 from flask_admin.contrib.sqla import filters
-from sqlalchemy import CheckConstraint
+from sqlalchemy import CheckConstraint, func
 from sqlalchemy.orm.session import object_session
 from datetime import datetime
 from elizabeth import Personal, Address
 from faker import Faker
 from random import randint
+from threading import Thread
+from time import sleep
 app = Flask(__name__)
 
 # Create dummy secrey key so we can use sessions
@@ -256,6 +257,27 @@ def populateDb():
 			db.session.commit()
 		except:
 			db.session.rollback()
+
+def fake_act():
+	while True:
+		sleep(5)
+		r = randint(1,2)
+		if r%2==0:
+			r = True
+		else:
+			r= False
+		cv = content_viewed()
+		cv.user_id=randint(4222,5227)
+		cv.content_id=randint(0,175)
+		cv.datetime=default=str(datetime.now())
+		cv.rating = r
+		cv.percentage = randint(0,100)
+		db.session.add(cv)	
+		try:
+			db.session.commit()
+		except:
+			db.session.rollback()	
+
 #################
 # Flask views
 @app.route('/')
@@ -283,5 +305,10 @@ admin.add_view(sqla.ModelView(search, db.session))
 if __name__ == '__main__':
 	db.create_all()
 	#populateDb()	
-	# Start app
-	app.run(debug=True, host='67.205.166.236', port=80)
+	#Thread(target=fake_act).start()
+	Thread(target=app.run, kwargs=dict(debug=False, host='67.205.166.236', port=80)).start()
+	while True:
+		sleep(1)
+		input('\nType anything to get the Statistics\n')	
+		print('\n\n Amount of content watched so far: ',db.session.execute('select pipocadb.statistics();').scalar(),'\n')
+		sleep(2)
